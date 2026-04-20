@@ -153,6 +153,18 @@ pytest tests/test_service.py -v
 pytest tests/test_api.py -v
 ```
 
+### Тестирование и формирование HTML отчета о пройденых тестах
+```bash
+./venv/bin/python3 -m pytest tests/ \
+  --html=reports/test_report.html \
+  --self-contained-html \
+  -v
+```
+
+- **Местоположение**: `reports/test_report.html`
+- **Формат**: Self-contained HTML (не требует внешних файлов)
+- **Содержит**: Все детали тестов, логи, статистика
+
 ### Сценарии тестирования
 
 1. **Корректный запрос** → ожидаемый ответ
