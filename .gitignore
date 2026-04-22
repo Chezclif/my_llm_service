@@ -133,3 +133,11 @@ dmypy.json
 # Application
 app.log
 logs/
+
+# Test & Coverage Reports
+reports/
+.ruff_cache/
+htmlcov/
+
+# Pre-commit
+.pre-commit-framework/

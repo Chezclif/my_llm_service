@@ -1,7 +1,9 @@
 """Конфигурация pytest и фиксчуры"""
-import pytest
+
 import asyncio
 from unittest.mock import MagicMock
+
+import pytest
 
 from cache.memory import Cache
 from config.settings import Settings

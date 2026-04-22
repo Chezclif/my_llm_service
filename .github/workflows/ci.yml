@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: Lint with ruff
+      run: ruff check --output-format=github .
+
+    - name: Format check with black
+      run: black --check .
+
+    - name: Type check with mypy
+      run: mypy . --ignore-missing-imports
+      continue-on-error: true  # Optional: don't fail on type errors
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: Run tests with coverage
+      run: |
+        pytest tests/ \
+          --html=reports/test_report.html \
+          --self-contained-html \
+          --cov=. \
+          --cov-report=xml \
+          --cov-report=term \
+          -v
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: Upload test report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report-py${{ matrix.python-version }}
+        path: reports/test_report.html
+
+  dependencies:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.13"
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Check if all dependencies can be installed
+      run: |
+        python -m pip install --upgrade pip
+        pip install --dry-run -r requirements.txt
+        pip install --dry-run -r requirements-dev.txt
+
+    - name: Verify imports
+      run: |
+        python -c "import fastapi; print('FastAPI:', fastapi.__version__)"
+        python -c "import pydantic; print('Pydantic:', pydantic.__version__)"
+        python -c "import gigachat; print('GigaChat SDK installed')"
+        python -c "import pytest; print('Pytest:', pytest.__version__)"
+
+  build:
+    name: Build Status
+    needs: [lint, test, dependencies]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Check build status
+      run: |
+        if [ "${{ needs.lint.result }}" == "failure" ] || \
+           [ "${{ needs.test.result }}" == "failure" ] || \
+           [ "${{ needs.dependencies.result }}" == "failure" ]; then
+          echo "❌ CI pipeline failed"
+          exit 1
+        fi
+        echo "✅ CI pipeline passed"
