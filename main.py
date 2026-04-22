@@ -1,4 +1,5 @@
 """Главное FastAPI приложение"""
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -15,13 +16,16 @@ app_logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """Менеджер контекста lifespan для событий запуска/остановки"""
     # Запуск
-    app_logger.info("Application startup", extra={
-        "app_name": settings.app_name,
-        "version": settings.app_version,
-    })
+    app_logger.info(
+        "Application startup",
+        extra={
+            "app_name": settings.app_name,
+            "version": settings.app_version,
+        },
+    )
     yield
     # Остановка
     app_logger.info("Application shutdown")
@@ -29,14 +33,14 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Создать и настроить FastAPI приложение"""
-    
+
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         debug=settings.debug,
         lifespan=lifespan,
     )
-    
+
     # Добавить CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -45,10 +49,10 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # Включить маршруты
     app.include_router(router, prefix="/api/v1")
-    
+
     return app
 
 
@@ -57,7 +61,7 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",

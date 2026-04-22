@@ -1,5 +1,7 @@
 # LLM Service - FastAPI + GigaChat Integration
 
+[![CI](https://github.com/yourusername/my_llm_service/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/my_llm_service/actions/workflows/ci.yml)
+
 Минималистичный но полнофункциональный сервис для обработки текста через LLM API с использованием FastAPI и Pydantic.
 
 ## 🎯 Возможности
@@ -165,6 +167,34 @@ pytest tests/test_api.py -v
 - **Формат**: Self-contained HTML (не требует внешних файлов)
 - **Содержит**: Все детали тестов, логи, статистика
 
+### Быстрый запуск тестов
+```bash
+./run_tests.sh  # Запускает pytest с полной конфигурацией
+```
+
+### Development Setup
+```bash
+# Установить dev зависимости (линтеры, форматеры, type checkers)
+pip install -r requirements-dev.txt
+
+# Установить pre-commit hooks
+pre-commit install
+```
+
+### Code Quality Checks
+```bash
+# Linting
+ruff check .              # Проверить ошибки
+ruff check --fix .        # Автоисправить
+
+# Форматирование
+black .                   # Отформатировать код
+black --check .           # Только проверка
+
+# Type checking
+mypy .                    # Проверить типы
+```
+
 ### Сценарии тестирования
 
 1. **Корректный запрос** → ожидаемый ответ
@@ -205,11 +235,11 @@ curl http://localhost:8000/api/v1/health
 ## 🏗️ Архитектура
 
 ```
-request → Validation (Pydantic) 
+request → Validation (Pydantic)
         → Pipeline Orchestration
         → Cache Check (Cache hit?)
         ├─ YES: Return from cache
-        └─ NO: 
+        └─ NO:
             → LLM API Call (with retry logic)
             → Response Validation & Post-processing
             → Store in Cache
@@ -360,5 +390,3 @@ logs/app.log
 ## 📄 Лицензия
 
 MIT
-
-

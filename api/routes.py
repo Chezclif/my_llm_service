@@ -1,5 +1,7 @@
 """API маршруты"""
+
 import traceback
+
 from fastapi import APIRouter, HTTPException, status
 
 from api.schemas import (
@@ -37,16 +39,19 @@ async def summarize(request: SummarizeRequest) -> SummarizeResponse:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", extra={
-            "error_type": type(e).__name__,
-            "traceback": traceback.format_exc(),
-        })
+        logger.error(
+            f"Unexpected error: {str(e)}",
+            extra={
+                "error_type": type(e).__name__,
+                "traceback": traceback.format_exc(),
+            },
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )
+        ) from e
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -54,9 +59,9 @@ async def health_check() -> HealthResponse:
     """Эндпоинт проверки здоровья"""
     settings = get_settings()
     cache = get_cache()
-    
+
     logger.info("Health check requested")
-    
+
     return HealthResponse(
         status="healthy",
         version=settings.app_version,
